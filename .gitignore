@@ -1,0 +1,53 @@
+# ========================================
+# Build files / compilation
+# ========================================
+bin/
+obj/
+out/
+[Bb]uild/
+[Ll]og/
+[Tt]emp/
+
+# ========================================
+# Packages / local dependencies
+# ========================================
+/packages/
+
+# ========================================
+# IDE-specific settings
+# ========================================
+
+# Rider / IntelliJ
+.idea/
+*.iml
+riderModule.iml
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# ReSharper
+_ReSharper.Caches/
+
+# ========================================
+# Temporary backup files
+# ========================================
+*.swp
+*.tmp
+*.bak
+*.log
+
+# ========================================
+# System Settings / OS
+# ========================================
+.DS_Store
+Thumbs.db
+
+# ========================================
+# Optionals
+# ========================================
+# docker-compose.override.yml
+# *.env.local
