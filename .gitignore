@@ -4,6 +4,7 @@
 bin/
 obj/
 out/
+mysql-data/
 [Bb]uild/
 [Ll]og/
 [Tt]emp/
