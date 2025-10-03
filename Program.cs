@@ -1,8 +1,13 @@
 using CarManager.Domain.DTOs;
+using CarManager.Domain.Interfaces;
+using CarManager.Domain.Services;
 using CarManager.Infraestructure.Database;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddScoped<IAdministratorService, AdministratorService>();
 
 builder.Services.AddDbContext<DatabaseContext>(options =>
 {
@@ -17,9 +22,9 @@ var app = builder.Build();
 
 app.MapGet("/", () => "Hello World!");
 
-app.MapGet(("/login"), () => (LoginDTO loginDTO) =>
+app.MapGet(("/login"), () => ([FromBody] LoginDTO loginDTO, IAdministratorService service) =>
 {
-    if (loginDTO.Email == "admin@teste.com" && loginDTO.Password == "123456")
+    if (service.Login(loginDTO) != null)
         return Results.Ok("Login com sucesso");
     else
         return Results.Unauthorized();
