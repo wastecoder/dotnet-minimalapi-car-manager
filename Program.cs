@@ -1,4 +1,5 @@
 using CarManager.Domain.DTOs;
+using CarManager.Domain.Entities;
 using CarManager.Domain.Interfaces;
 using CarManager.Domain.ModelViews;
 using CarManager.Domain.Services;
@@ -10,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<IAdministratorService, AdministratorService>();
+builder.Services.AddScoped<IVehicleService, VehicleService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -36,7 +38,7 @@ app.MapGet("/", () =>
 #endregion
 
 #region Administrators
-app.MapGet(("/administrators/login"), () => ([FromBody] LoginDTO loginDTO, IAdministratorService service) =>
+app.MapPost("/administrators/login", (LoginDTO loginDTO, IAdministratorService service) =>
 {
     if (service.Login(loginDTO) != null)
         return Results.Ok("Login successful");
@@ -46,7 +48,18 @@ app.MapGet(("/administrators/login"), () => ([FromBody] LoginDTO loginDTO, IAdmi
 #endregion
 
 #region Vehicles
-// TODO: Vehicles
+app.MapPost("/vehicles", (VehicleDTO vehicleDto, IVehicleService service) =>
+{
+    var vehicle = new Vehicle
+    {
+        Name = vehicleDto.Name,
+        Brand = vehicleDto.Brand,
+        Year = vehicleDto.Year
+    };
+    service.Add(vehicle);
+
+    return Results.Created($"/vehicles/{vehicle.Id}", vehicle);
+});
 #endregion
 
 #region Application
