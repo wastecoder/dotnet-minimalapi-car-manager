@@ -66,6 +66,14 @@ app.MapGet("/vehicles", ([FromQuery] int? page, IVehicleService service) =>
     var vehicles = service.GetAll(page, 5, null, null);
     return  Results.Ok(vehicles);
 }).WithTags("Vehicles");
+
+app.MapGet("/vehicles/{id}", ([FromRoute] int id, IVehicleService service) =>
+{
+    var vehicle = service.GetById(id);
+    if (vehicle == null) return Results.NotFound("Vehicle not found");
+
+    return Results.Ok(vehicle);
+}).WithTags("Vehicles");
 #endregion
 
 #region Application
