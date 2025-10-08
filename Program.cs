@@ -1,5 +1,6 @@
 using CarManager.Domain.DTOs;
 using CarManager.Domain.Interfaces;
+using CarManager.Domain.ModelViews;
 using CarManager.Domain.Services;
 using CarManager.Infraestructure.Database;
 using Microsoft.AspNetCore.Mvc;
@@ -23,7 +24,12 @@ builder.Services.AddDbContext<DatabaseContext>(options =>
 
 var app = builder.Build();
 
-app.MapGet("/", () => "Hello World!");
+// app.MapGet("/", () => Results.Json(new Home()));
+app.MapGet("/", () =>
+{
+    Console.WriteLine("Accessing API documentation...");
+    return Results.Redirect("/swagger");
+});
 
 app.MapGet(("/login"), () => ([FromBody] LoginDTO loginDTO, IAdministratorService service) =>
 {
