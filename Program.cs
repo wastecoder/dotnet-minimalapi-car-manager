@@ -6,6 +6,7 @@ using CarManager.Infraestructure.Database;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+#region Builder
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<IAdministratorService, AdministratorService>();
@@ -23,23 +24,34 @@ builder.Services.AddDbContext<DatabaseContext>(options =>
 });
 
 var app = builder.Build();
+#endregion
 
+#region Home
 // app.MapGet("/", () => Results.Json(new Home()));
 app.MapGet("/", () =>
 {
     Console.WriteLine("Accessing API documentation...");
     return Results.Redirect("/swagger");
 });
+#endregion
 
-app.MapGet(("/login"), () => ([FromBody] LoginDTO loginDTO, IAdministratorService service) =>
+#region Administrators
+app.MapGet(("/administrators/login"), () => ([FromBody] LoginDTO loginDTO, IAdministratorService service) =>
 {
     if (service.Login(loginDTO) != null)
-        return Results.Ok("Login com sucesso");
+        return Results.Ok("Login successful");
     else
         return Results.Unauthorized();
 });
+#endregion
 
+#region Vehicles
+// TODO: Vehicles
+#endregion
+
+#region Application
 app.UseSwagger();
 app.UseSwaggerUI();
 
 app.Run();
+#endregion
