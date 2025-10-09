@@ -11,6 +11,11 @@ using Microsoft.EntityFrameworkCore;
 #region Builder
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+});
+
 builder.Services.AddScoped<IAdministratorService, AdministratorService>();
 builder.Services.AddScoped<IVehicleService, VehicleService>();
 
@@ -47,8 +52,14 @@ ValidationErrors ValidateAdministrator(AdministratorDTO administratorDto)
         validation.Messages.Add("E-mail is required");
     if (string.IsNullOrEmpty(administratorDto.Password))
         validation.Messages.Add("Password is required");
-    if (administratorDto.Role == AdmRole.None)
-        validation.Messages.Add("Role is required");
+
+    if (string.IsNullOrEmpty(administratorDto.Role) ||
+        !Enum.TryParse<AdmRole>(administratorDto.Role, ignoreCase: true, out var parsedRole) ||
+        !Enum.IsDefined(typeof(AdmRole), parsedRole) ||
+        parsedRole == AdmRole.None)
+    {
+        validation.Messages.Add("Acceptable roles are 'Adm' or 'Editor'");
+    }
 
     return validation;
 }
@@ -72,11 +83,13 @@ app.MapPost("/administrators", ([FromBody] AdministratorDTO administratorDto, IA
     if (HasAdministratorValidationErrors(administratorDto, out var errors))
         return Results.BadRequest(errors);
 
+    Enum.TryParse<AdmRole>(administratorDto.Role, true, out var parsedRole);
+
     var administrator = new Administrator
     {
         Email = administratorDto.Email,
         Password = administratorDto.Password,
-        Role = administratorDto.Role
+        Role = parsedRole
     };
     service.Add(administrator);
 

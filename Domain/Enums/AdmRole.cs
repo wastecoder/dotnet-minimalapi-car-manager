@@ -1,5 +1,8 @@
-﻿namespace CarManager.Domain.Enums;
+﻿using System.Text.Json.Serialization;
 
+namespace CarManager.Domain.Enums;
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum AdmRole
 {
     None = 0,
