@@ -1,5 +1,6 @@
 using CarManager.Domain.DTOs;
 using CarManager.Domain.Entities;
+using CarManager.Domain.Enums;
 using CarManager.Domain.Interfaces;
 using CarManager.Domain.ModelViews;
 using CarManager.Domain.Services;
@@ -38,12 +39,73 @@ app.MapGet("/", () =>
 #endregion
 
 #region Administrators
+ValidationErrors ValidateAdministrator(AdministratorDTO administratorDto)
+{
+    var validation = new ValidationErrors();
+
+    if (string.IsNullOrEmpty(administratorDto.Email))
+        validation.Messages.Add("E-mail is required");
+    if (string.IsNullOrEmpty(administratorDto.Password))
+        validation.Messages.Add("Password is required");
+    if (administratorDto.Role == AdmRole.None)
+        validation.Messages.Add("Role is required");
+
+    return validation;
+}
+
+bool HasAdministratorValidationErrors(AdministratorDTO dto, out ValidationErrors errors)
+{
+    errors = ValidateAdministrator(dto);
+    return errors.Messages.Count > 0;
+}
+
 app.MapPost("/administrators/login", (LoginDTO loginDTO, IAdministratorService service) =>
 {
     if (service.Login(loginDTO) != null)
         return Results.Ok("Login successful");
     else
         return Results.Unauthorized();
+}).WithTags("Administrators");
+
+app.MapPost("/administrators", ([FromBody] AdministratorDTO administratorDto, IAdministratorService service) =>
+{
+    if (HasAdministratorValidationErrors(administratorDto, out var errors))
+        return Results.BadRequest(errors);
+
+    var administrator = new Administrator
+    {
+        Email = administratorDto.Email,
+        Password = administratorDto.Password,
+        Role = administratorDto.Role
+    };
+    service.Add(administrator);
+
+    return Results.Created($"/administrators/{administrator.Id}", administrator);
+}).WithTags("Administrators");
+
+app.MapGet("/administrators", ([FromQuery] int? page, IAdministratorService service) =>
+{
+    var administrators = service.GetAll(page, 5);
+
+    var administratorResponses = administrators
+        .Select(a => new AdministratorResponse(a.Id, a.Email, a.Role))
+        .ToList();
+
+    return Results.Ok(administratorResponses);
+}).WithTags("Administrators");
+
+app.MapGet("/administrators/{id:int}", ([FromRoute] int id, IAdministratorService service) =>
+{
+    var administrator = service.GetById(id);
+    if (administrator == null) return Results.NotFound("Administrator not found");
+
+    var administratorResponse = new AdministratorResponse(
+        administrator.Id,
+        administrator.Email,
+        administrator.Role
+    );
+
+    return Results.Ok(administratorResponse);
 }).WithTags("Administrators");
 #endregion
 
@@ -62,7 +124,7 @@ ValidationErrors ValidateVehicle(VehicleDTO vehicleDto)
     return validation;
 }
 
-bool HasValidationErrors(VehicleDTO dto, out ValidationErrors errors)
+bool HasVehicleValidationErrors(VehicleDTO dto, out ValidationErrors errors)
 {
     errors = ValidateVehicle(dto);
     return errors.Messages.Count > 0;
@@ -70,7 +132,7 @@ bool HasValidationErrors(VehicleDTO dto, out ValidationErrors errors)
 
 app.MapPost("/vehicles", ([FromBody] VehicleDTO vehicleDto, IVehicleService service) =>
 {
-    if (HasValidationErrors(vehicleDto, out var errors))
+    if (HasVehicleValidationErrors(vehicleDto, out var errors))
         return Results.BadRequest(errors);
 
     var vehicle = new Vehicle
@@ -103,7 +165,7 @@ app.MapPut("/vehicles/{id:int}", (int id, [FromBody] VehicleDTO vehicleDto, IVeh
     var vehicle = service.GetById(id);
     if (vehicle is null) return Results.NotFound("Vehicle not found");
 
-    if (HasValidationErrors(vehicleDto, out var errors))
+    if (HasVehicleValidationErrors(vehicleDto, out var errors))
         return Results.BadRequest(errors);
 
     vehicle.Name = vehicleDto.Name;
