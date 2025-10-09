@@ -1,3 +1,5 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 using CarManager.Domain.DTOs;
 using CarManager.Domain.Entities;
@@ -64,6 +66,29 @@ app.MapGet("/", () =>
 #endregion
 
 #region Administrators
+
+string GenerateJwtToken(Administrator administrator)
+{
+    if (string.IsNullOrEmpty(jwtKey)) return string.Empty;
+
+    var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+    var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+    var claims = new List<Claim>()
+    {
+        new Claim("Email", administrator.Email),
+        new Claim("Role", administrator.Role.ToString())
+    };
+
+    var token = new JwtSecurityToken(
+        claims:  claims,
+        expires: DateTime.Now.AddHours(1),
+        signingCredentials: credentials
+    );
+
+    return new JwtSecurityTokenHandler().WriteToken(token);
+}
+
 ValidationErrors ValidateAdministrator(AdministratorDTO administratorDto)
 {
     var validation = new ValidationErrors();
@@ -92,11 +117,19 @@ bool HasAdministratorValidationErrors(AdministratorDTO dto, out ValidationErrors
 
 app.MapPost("/administrators/login", (LoginDTO loginDTO, IAdministratorService service) =>
 {
-    if (service.Login(loginDTO) != null)
-        return Results.Ok("Login successful");
-    else
+    var administrator = service.Login(loginDTO);
+    if (administrator == null)
         return Results.Unauthorized();
-}).WithTags("Administrators");
+
+    string token = GenerateJwtToken(administrator);
+    return Results.Ok(new AdministratorLoginResponse(
+        administrator.Email,
+        administrator.Role.ToString(),
+        token
+    ));
+})
+    .AllowAnonymous()
+    .WithTags("Administrators");
 
 app.MapPost("/administrators", ([FromBody] AdministratorDTO administratorDto, IAdministratorService service) =>
 {
