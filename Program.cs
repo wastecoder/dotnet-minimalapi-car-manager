@@ -114,7 +114,9 @@ app.MapPost("/administrators", ([FromBody] AdministratorDTO administratorDto, IA
     service.Add(administrator);
 
     return Results.Created($"/administrators/{administrator.Id}", administrator);
-}).WithTags("Administrators");
+})
+    .RequireAuthorization()
+    .WithTags("Administrators");
 
 app.MapGet("/administrators", ([FromQuery] int? page, IAdministratorService service) =>
 {
@@ -125,7 +127,9 @@ app.MapGet("/administrators", ([FromQuery] int? page, IAdministratorService serv
         .ToList();
 
     return Results.Ok(administratorResponses);
-}).WithTags("Administrators");
+})
+    .RequireAuthorization()
+    .WithTags("Administrators");
 
 app.MapGet("/administrators/{id:int}", ([FromRoute] int id, IAdministratorService service) =>
 {
@@ -139,7 +143,9 @@ app.MapGet("/administrators/{id:int}", ([FromRoute] int id, IAdministratorServic
     );
 
     return Results.Ok(administratorResponse);
-}).WithTags("Administrators");
+})
+    .RequireAuthorization()
+    .WithTags("Administrators");
 #endregion
 
 #region Vehicles
@@ -177,13 +183,17 @@ app.MapPost("/vehicles", ([FromBody] VehicleDTO vehicleDto, IVehicleService serv
     service.Add(vehicle);
 
     return Results.Created($"/vehicles/{vehicle.Id}", vehicle);
-}).WithTags("Vehicles");
+})
+    .RequireAuthorization()
+    .WithTags("Vehicles");
 
 app.MapGet("/vehicles", ([FromQuery] int? page, IVehicleService service) =>
 {
     var vehicles = service.GetAll(page, 5, null, null);
     return  Results.Ok(vehicles);
-}).WithTags("Vehicles");
+})
+    .RequireAuthorization()
+    .WithTags("Vehicles");
 
 app.MapGet("/vehicles/{id}", ([FromRoute] int id, IVehicleService service) =>
 {
@@ -191,7 +201,9 @@ app.MapGet("/vehicles/{id}", ([FromRoute] int id, IVehicleService service) =>
     if (vehicle == null) return Results.NotFound("Vehicle not found");
 
     return Results.Ok(vehicle);
-}).WithTags("Vehicles");
+})
+    .RequireAuthorization()
+    .WithTags("Vehicles");
 
 app.MapPut("/vehicles/{id:int}", (int id, [FromBody] VehicleDTO vehicleDto, IVehicleService service) =>
 {
@@ -208,7 +220,9 @@ app.MapPut("/vehicles/{id:int}", (int id, [FromBody] VehicleDTO vehicleDto, IVeh
     service.Update(vehicle);
 
     return Results.Ok(vehicle);
-}).WithTags("Vehicles");
+})
+    .RequireAuthorization()
+    .WithTags("Vehicles");
 
 app.MapDelete("/vehicles/{id:int}", (int id, IVehicleService service) =>
 {
@@ -218,7 +232,9 @@ app.MapDelete("/vehicles/{id:int}", (int id, IVehicleService service) =>
     service.Delete(vehicle);
 
     return Results.NoContent();
-}).WithTags("Vehicles");
+})
+    .RequireAuthorization()
+    .WithTags("Vehicles");
 #endregion
 
 #region Application
