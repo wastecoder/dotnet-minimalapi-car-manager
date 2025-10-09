@@ -1,4 +1,5 @@
 ﻿using CarManager.Domain.Entities;
+using CarManager.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarManager.Infraestructure.Database;
@@ -16,12 +17,16 @@ public class DatabaseContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Administrator>()
+            .Property(a => a.Role)
+            .HasConversion<string>();
+
         modelBuilder.Entity<Administrator>().HasData(
             new Administrator {
                 Id = 1,
                 Email = "administrador@teste.com",
                 Password = "123456",
-                Role = "Adm"
+                Role = AdmRole.Adm
             }
         );
     }

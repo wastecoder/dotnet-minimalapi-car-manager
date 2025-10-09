@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using CarManager.Domain.Enums;
 
 namespace CarManager.Domain.Entities;
 
@@ -19,5 +20,5 @@ public class Administrator
 
     [Required]
     [StringLength(20)]
-    public string Role { get; set; }
+    public AdmRole Role { get; set; }
 }
