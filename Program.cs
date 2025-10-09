@@ -1,3 +1,4 @@
+using System.Text;
 using CarManager.Domain.DTOs;
 using CarManager.Domain.Entities;
 using CarManager.Domain.Enums;
@@ -5,8 +6,10 @@ using CarManager.Domain.Interfaces;
 using CarManager.Domain.ModelViews;
 using CarManager.Domain.Services;
 using CarManager.Infraestructure.Database;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 #region Builder
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +18,23 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
 });
+
+var jwtKey = builder.Configuration.GetValue<string>("Jwt:Key");
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateLifetime = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+    };
+});
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<IAdministratorService, AdministratorService>();
 builder.Services.AddScoped<IVehicleService, VehicleService>();
@@ -204,6 +224,9 @@ app.MapDelete("/vehicles/{id:int}", (int id, IVehicleService service) =>
 #region Application
 app.UseSwagger();
 app.UseSwaggerUI();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.Run();
 #endregion
