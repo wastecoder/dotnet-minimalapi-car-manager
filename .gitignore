@@ -1,13 +1,13 @@
 # ========================================
 # Build files / compilation
 # ========================================
-bin/
-obj/
-out/
-mysql-data/
-[Bb]uild/
-[Ll]og/
-[Tt]emp/
+**/bin/
+**/obj/
+**/out/
+**/[Bb]uild/
+**/[Ll]og/
+**/[Tt]emp/
+**/mysql-data/
 
 # ========================================
 # Packages / local dependencies
