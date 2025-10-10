@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 #region Builder
 var builder = WebApplication.CreateBuilder(args);
@@ -33,6 +34,8 @@ builder.Services.AddAuthentication(options =>
     {
         ValidateLifetime = true,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+        ValidateIssuer = false,
+        ValidateAudience = false
     };
 });
 
@@ -42,7 +45,33 @@ builder.Services.AddScoped<IAdministratorService, AdministratorService>();
 builder.Services.AddScoped<IVehicleService, VehicleService>();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer", // Se colocar maiúsculo, vai precisar colocar "Bearer {token}"
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Insert only your JWT token, without 'Bearer'"
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] { }
+        }
+    });
+});
 
 builder.Services.AddDbContext<DatabaseContext>(options =>
 {
@@ -62,7 +91,9 @@ app.MapGet("/", () =>
 {
     Console.WriteLine("Accessing API documentation...");
     return Results.Redirect("/swagger");
-}).WithTags("Home");
+})
+    .AllowAnonymous()
+    .WithTags("Home");
 #endregion
 
 #region Administrators
