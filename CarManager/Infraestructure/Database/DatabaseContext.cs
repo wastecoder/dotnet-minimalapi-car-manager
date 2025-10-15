@@ -7,10 +7,10 @@ namespace CarManager.Infraestructure.Database;
 public class DatabaseContext : DbContext
 {
     private readonly IConfiguration _configuration;
-    public DatabaseContext(IConfiguration configuration)
-    {
-        _configuration = configuration;
-    }
+
+    public DatabaseContext(DbContextOptions<DatabaseContext> options)
+        : base(options)
+    { }
 
     public DbSet<Administrator> Administrators { get; set; } = default!;
     public DbSet<Vehicle> Vehicles { get; set; } = default!;
@@ -21,14 +21,18 @@ public class DatabaseContext : DbContext
             .Property(a => a.Role)
             .HasConversion<string>();
 
-        modelBuilder.Entity<Administrator>().HasData(
-            new Administrator {
-                Id = 1,
-                Email = "administrador@teste.com",
-                Password = "123456",
-                Role = AdmRole.Adm
-            }
-        );
+        if (Database.ProviderName != "Microsoft.EntityFrameworkCore.InMemory")
+        {
+            modelBuilder.Entity<Administrator>().HasData(
+                new Administrator {
+                    Id = 1,
+                    Email = "administrador@teste.com",
+                    Password = "123456",
+                    Role = AdmRole.Adm
+                }
+            );
+        }
+
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
