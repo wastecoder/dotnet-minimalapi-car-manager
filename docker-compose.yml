@@ -1,6 +1,7 @@
 ﻿version: '3.8'
+
 services:
-  mysql:
+  mysql-car-manager:
     image: mysql:8.0
     container_name: mysql-car-manager
     restart: always
@@ -11,3 +12,4 @@ services:
       - "3306:3306"
     volumes:
       - ./mysql-data:/var/lib/mysql
+      - ./init-scripts:/docker-entrypoint-initdb.d
