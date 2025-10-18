@@ -23,7 +23,7 @@ public class AdministratorService : IAdministratorService
     public Administrator Add(Administrator administrator)
     {
         if (_context.Administrators.Any(a => a.Email == administrator.Email))
-            throw new InvalidOperationException("Email já cadastrado.");
+            throw new InvalidOperationException("Email already registered.");
 
         _context.Administrators.Add(administrator);
         _context.SaveChanges();
