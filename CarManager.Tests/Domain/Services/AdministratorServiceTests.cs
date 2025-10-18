@@ -56,7 +56,6 @@ public class AdministratorServiceTests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
         public void ShouldThrowException_WhenEmailAlreadyExists()
         {
             // Arrange
@@ -77,8 +76,9 @@ public class AdministratorServiceTests
 
             service.Add(adm1);
 
-            // Act
-            service.Add(adm2); // Deve lançar InvalidOperationException
+            // Act & Assert
+            var ex = Assert.ThrowsException<InvalidOperationException>(() => service.Add(adm2));
+            Assert.AreEqual("Email already registered.", ex.Message);
         }
     }
 
