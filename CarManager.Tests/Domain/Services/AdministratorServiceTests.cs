@@ -10,7 +10,7 @@ namespace CarManager.Tests.Domain.Services;
 [TestClass]
 public class AdministratorServiceTests
 {
-    private DatabaseContext CreateTestContext()
+    private static DatabaseContext CreateTestContext()
     {
         var options = new DbContextOptionsBuilder<DatabaseContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -24,176 +24,192 @@ public class AdministratorServiceTests
         return context;
     }
 
-    [TestMethod]
-    public void Login_ShouldReturnAdministrator_WhenCredentialsAreValid()
+    [TestClass]
+    public class AddTests
     {
-        // Arrange
-        using var context = CreateTestContext();
-        var adm = new Administrator
+        [TestMethod]
+        public void ShouldAddAdministrator_WhenDataIsValid()
         {
-            Email = "adm@teste.com",
-            Password = "123456",
-            Role = AdmRole.Adm
-        };
-        var service = new AdministratorService(context);
-        service.Add(adm);
+            // Arrange
+            using var context = CreateTestContext();
+            var adm = new Administrator
+            {
+                Email = "teste@teste.com",
+                Password = "teste",
+                Role = AdmRole.Adm
+            };
 
-        var loginDto = new LoginDTO
+            var administratorService = new AdministratorService(context);
+
+            // Act
+            administratorService.Add(adm);
+
+            // Assert
+            var allAdmins = administratorService.GetAll(page: 1, pageSize: 5);
+            Assert.IsNotNull(allAdmins);
+            Assert.AreEqual(1, allAdmins.Count);
+
+            var savedAdmin = allAdmins.First();
+            Assert.AreEqual("teste@teste.com", savedAdmin.Email);
+            Assert.AreEqual("teste", savedAdmin.Password);
+            Assert.AreEqual(AdmRole.Adm, savedAdmin.Role);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void ShouldThrowException_WhenEmailAlreadyExists()
         {
-            Email = "adm@teste.com",
-            Password = "123456"
-        };
+            // Arrange
+            using var context = CreateTestContext();
+            var service = new AdministratorService(context);
+            var adm1 = new Administrator
+            {
+                Email = "duplicado@teste.com",
+                Password = "123456",
+                Role = AdmRole.Adm
+            };
+            var adm2 = new Administrator
+            {
+                Email = "duplicado@teste.com",
+                Password = "outra",
+                Role = AdmRole.Adm
+            };
 
-        // Act
-        var result = service.Login(loginDto);
+            service.Add(adm1);
 
-        // Assert
-        Assert.IsNotNull(result);
-        Assert.AreEqual(adm.Email, result.Email);
-        Assert.AreEqual(adm.Password, result.Password);
-        Assert.AreEqual(AdmRole.Adm, result.Role);
+            // Act
+            service.Add(adm2); // Deve lançar InvalidOperationException
+        }
     }
 
-    [TestMethod]
-    public void Login_ShouldReturnNull_WhenCredentialsAreInvalid()
+    [TestClass]
+    public class LoginTests
     {
-        // Arrange
-        using var context = CreateTestContext();
-        var service = new AdministratorService(context);
-
-        var loginDto = new LoginDTO
+        [TestMethod]
+        public void ShouldReturnAdministrator_WhenCredentialsAreValid()
         {
-            Email = "invalido@teste.com",
-            Password = "errada"
-        };
+            // Arrange
+            using var context = CreateTestContext();
+            var adm = new Administrator
+            {
+                Email = "adm@teste.com",
+                Password = "123456",
+                Role = AdmRole.Adm
+            };
+            var service = new AdministratorService(context);
+            service.Add(adm);
 
-        // Act
-        var result = service.Login(loginDto);
+            var loginDto = new LoginDTO
+            {
+                Email = "adm@teste.com",
+                Password = "123456"
+            };
 
-        // Assert
-        Assert.IsNull(result);
+            // Act
+            var result = service.Login(loginDto);
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(adm.Email, result.Email);
+            Assert.AreEqual(adm.Password, result.Password);
+            Assert.AreEqual(AdmRole.Adm, result.Role);
+        }
+
+        [TestMethod]
+        public void ShouldReturnNull_WhenCredentialsAreInvalid()
+        {
+            // Arrange
+            using var context = CreateTestContext();
+            var service = new AdministratorService(context);
+
+            var loginDto = new LoginDTO
+            {
+                Email = "invalido@teste.com",
+                Password = "errada"
+            };
+
+            // Act
+            var result = service.Login(loginDto);
+
+            // Assert
+            Assert.IsNull(result);
+        }
     }
 
-    [TestMethod]
-    public void Add_ShouldAddAdministrator_WhenDataIsValid()
+    [TestClass]
+    public class GetByIdTests
     {
-        // Arrange
-        using var context = CreateTestContext();
-        var adm = new Administrator
+        [TestMethod]
+        public void ShouldReturnAdministrator_WhenIdIsValid()
         {
-            Email = "teste@teste.com",
-            Password = "teste",
-            Role = AdmRole.Adm
-        };
+            using var context = CreateTestContext();
+            var adm = new Administrator
+            {
+                Email = "teste2@teste.com",
+                Password = "teste",
+                Role = AdmRole.Adm
+            };
 
-        var administratorService = new AdministratorService(context);
+            var administratorService = new AdministratorService(context);
 
-        // Act
-        administratorService.Add(adm);
+            administratorService.Add(adm);
 
-        // Assert
-        var allAdmins = administratorService.GetAll(page: 1, pageSize: 5);
-        Assert.IsNotNull(allAdmins);
-        Assert.AreEqual(1, allAdmins.Count);
+            var generatedId = adm.Id;
+            var savedAdministrator = administratorService.GetById(generatedId);
 
-        var savedAdmin = allAdmins.First();
-        Assert.AreEqual("teste@teste.com", savedAdmin.Email);
-        Assert.AreEqual("teste", savedAdmin.Password);
-        Assert.AreEqual(AdmRole.Adm, savedAdmin.Role);
+            Assert.IsNotNull(savedAdministrator);
+            Assert.AreEqual(generatedId, savedAdministrator.Id);
+            Assert.AreEqual("teste2@teste.com", savedAdministrator.Email);
+        }
+
+        [TestMethod]
+        public void ShouldReturnNull_WhenAdministratorDoesNotExist()
+        {
+            // Arrange
+            using var context = CreateTestContext();
+            const int missingId = 999;
+            var service = new AdministratorService(context);
+
+            // Act
+            var result = service.GetById(missingId);
+
+            // Assert
+            Assert.IsNull(result);
+        }
     }
 
-    [TestMethod]
-    [ExpectedException(typeof(InvalidOperationException))]
-    public void Add_ShouldThrowException_WhenEmailAlreadyExists()
+    [TestClass]
+    public class GetAllTests
     {
-        // Arrange
-        using var context = CreateTestContext();
-        var service = new AdministratorService(context);
-        var adm1 = new Administrator
+        [TestMethod]
+        public void ShouldReturnTwoAdministrators_WhenTwoAreSaved()
         {
-            Email = "duplicado@teste.com",
-            Password = "123456",
-            Role = AdmRole.Adm
-        };
-        var adm2 = new Administrator
-        {
-            Email = "duplicado@teste.com",
-            Password = "outra",
-            Role = AdmRole.Adm
-        };
+            // Arrange
+            using var context = CreateTestContext();
+            var service = new AdministratorService(context);
 
-        service.Add(adm1);
+            service.Add(new Administrator
+            {
+                Email = "adm1@teste.com",
+                Password = "123",
+                Role = AdmRole.Adm
+            });
 
-        // Act
-        service.Add(adm2); // Deve lançar InvalidOperationException
-    }
+            service.Add(new Administrator
+            {
+                Email = "adm2@teste.com",
+                Password = "456",
+                Role = AdmRole.Adm
+            });
 
-    [TestMethod]
-    public void GetById_ShouldReturnAdministrator_WhenIdIsValid()
-    {
-        using var context = CreateTestContext();
-        var adm = new Administrator
-        {
-            Email = "teste2@teste.com",
-            Password = "teste",
-            Role = AdmRole.Adm
-        };
+            // Act
+            var result = service.GetAll(page: 1, pageSize: 5);
 
-        var administratorService = new AdministratorService(context);
-
-        administratorService.Add(adm);
-
-        var generatedId = adm.Id;
-        var savedAdministrator = administratorService.GetById(generatedId);
-
-        Assert.IsNotNull(savedAdministrator);
-        Assert.AreEqual(generatedId, savedAdministrator.Id);
-        Assert.AreEqual("teste2@teste.com", savedAdministrator.Email);
-    }
-
-    [TestMethod]
-    public void GetById_ShouldReturnNull_WhenAdministratorDoesNotExist()
-    {
-        // Arrange
-        using var context = CreateTestContext();
-        const int missingId = 999;
-        var service = new AdministratorService(context);
-
-        // Act
-        var result = service.GetById(missingId);
-
-        // Assert
-        Assert.IsNull(result);
-    }
-
-    [TestMethod]
-    public void GetAll_ShouldReturnTwoAdministrators_WhenTwoAreSaved()
-    {
-        // Arrange
-        using var context = CreateTestContext();
-        var service = new AdministratorService(context);
-
-        service.Add(new Administrator
-        {
-            Email = "adm1@teste.com",
-            Password = "123",
-            Role = AdmRole.Adm
-        });
-
-        service.Add(new Administrator
-        {
-            Email = "adm2@teste.com",
-            Password = "456",
-            Role = AdmRole.Adm
-        });
-
-        // Act
-        var result = service.GetAll(page: 1, pageSize: 5);
-
-        // Assert
-        Assert.IsNotNull(result);
-        Assert.AreEqual(2, result.Count);
-        Assert.IsTrue(result.Any(a => a.Email == "adm1@teste.com"));
-        Assert.IsTrue(result.Any(a => a.Email == "adm2@teste.com"));
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(2, result.Count);
+            Assert.IsTrue(result.Any(a => a.Email == "adm1@teste.com"));
+            Assert.IsTrue(result.Any(a => a.Email == "adm2@teste.com"));
+        }
     }
 }
