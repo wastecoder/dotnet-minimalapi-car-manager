@@ -234,6 +234,99 @@ public class Startup
                 .RequireAuthorization(new AuthorizeAttribute { Roles = "Adm" })
                 .WithTags("Administrators");
             #endregion
+            
+            #region Vehicles
+            ValidationErrors ValidateVehicle(VehicleDTO vehicleDto)
+            {
+                var validation = new ValidationErrors();
+
+                if (string.IsNullOrEmpty(vehicleDto.Name))
+                    validation.Messages.Add("Name is required");
+                if (string.IsNullOrEmpty(vehicleDto.Brand))
+                    validation.Messages.Add("Brand is required");
+                if (vehicleDto.Year < 1900)
+                    validation.Messages.Add("Vehicle year must be greater than or equal to 1900");
+
+                return validation;
+            }
+
+            bool HasVehicleValidationErrors(VehicleDTO dto, out ValidationErrors errors)
+            {
+                errors = ValidateVehicle(dto);
+                return errors.Messages.Count > 0;
+            }
+
+            endpoints.MapPost("/vehicles", ([FromBody] VehicleDTO vehicleDto, IVehicleService service) =>
+            {
+                if (HasVehicleValidationErrors(vehicleDto, out var errors))
+                    return Results.BadRequest(errors);
+
+                var vehicle = new Vehicle
+                {
+                    Name = vehicleDto.Name,
+                    Brand = vehicleDto.Brand,
+                    Year = vehicleDto.Year
+                };
+                service.Add(vehicle);
+
+                return Results.Created($"/vehicles/{vehicle.Id}", vehicle);
+            })
+                .RequireAuthorization()
+                .RequireAuthorization(new AuthorizeAttribute { Roles = "Adm, Editor" })
+                .WithTags("Vehicles");
+
+            endpoints.MapGet("/vehicles", ([FromQuery] int? page, IVehicleService service) =>
+            {
+                var vehicles = service.GetAll(page, 5, null, null);
+                return  Results.Ok(vehicles);
+            })
+                .RequireAuthorization()
+                .RequireAuthorization(new AuthorizeAttribute { Roles = "Adm, Editor" })
+                .WithTags("Vehicles");
+
+            endpoints.MapGet("/vehicles/{id}", ([FromRoute] int id, IVehicleService service) =>
+            {
+                var vehicle = service.GetById(id);
+                if (vehicle == null) return Results.NotFound("Vehicle not found");
+
+                return Results.Ok(vehicle);
+            })
+                .RequireAuthorization()
+                .WithTags("Vehicles");
+
+            endpoints.MapPut("/vehicles/{id:int}", (int id, [FromBody] VehicleDTO vehicleDto, IVehicleService service) =>
+            {
+                var vehicle = service.GetById(id);
+                if (vehicle is null) return Results.NotFound("Vehicle not found");
+
+                if (HasVehicleValidationErrors(vehicleDto, out var errors))
+                    return Results.BadRequest(errors);
+
+                vehicle.Name = vehicleDto.Name;
+                vehicle.Brand = vehicleDto.Brand;
+                vehicle.Year = vehicleDto.Year;
+
+                service.Update(vehicle);
+
+                return Results.Ok(vehicle);
+            })
+                .RequireAuthorization()
+                .RequireAuthorization(new AuthorizeAttribute { Roles = "Adm" })
+                .WithTags("Vehicles");
+
+            endpoints.MapDelete("/vehicles/{id:int}", (int id, IVehicleService service) =>
+            {
+                var vehicle = service.GetById(id);
+                if (vehicle == null) return Results.NotFound("Vehicle not found");
+
+                service.Delete(vehicle);
+
+                return Results.NoContent();
+            })
+                .RequireAuthorization()
+                .RequireAuthorization(new AuthorizeAttribute { Roles = "Adm" })
+                .WithTags("Vehicles");
+            #endregion
         });
     }
 }
