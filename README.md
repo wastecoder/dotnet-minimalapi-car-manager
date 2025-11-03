@@ -108,7 +108,28 @@ dotnet run
 ```
 A API estará disponível na porta [5054](http://localhost:5054).
 
-4. Executar os testes
+4. Faça login como administrador para obter o token JWT:
+
+Após iniciar a API, acesse o [Swagger UI](http://localhost:5054/swagger) e vá até o endpoint `POST /login`.
+
+Use as seguintes credenciais padrão para autenticação:
+
+```json
+{
+  "email": "administrador@teste.com",
+  "password": "123456"
+}
+```
+
+O endpoint retornará um token JWT.
+
+Copie o **token JWT** e clique no botão **"Authorize"** no topo do Swagger.
+
+Cole o token, sem as aspas e sem "Bearer ", e confirme.
+
+Isso permitirá testar todos os endpoints protegidos como administrador diretamente pelo Swagger.
+
+5. **(Opcional)** Executar os testes
 ```
 cd ../CarManager.Tests
 dotnet test
