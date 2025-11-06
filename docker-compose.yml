@@ -1,9 +1,7 @@
-﻿version: '3.8'
-
-services:
-  mysql-car-manager:
+﻿services:
+  carmanager-mysql:
     image: mysql:8.0
-    container_name: mysql-car-manager
+    container_name: carmanager-mysql
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: admin
@@ -12,3 +10,18 @@ services:
       - "3306:3306"
     volumes:
       - ./mysql-data:/var/lib/mysql
+
+  carmanager-api:
+    build:
+      context: .
+      dockerfile: CarManager/Dockerfile
+    container_name: carmanager-api
+    depends_on:
+      - carmanager-mysql
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__MySql=server=carmanager-mysql;port=3306;database=CarManagerDb;user=root;password=admin
+    command: ["dotnet", "CarManager.dll"]
