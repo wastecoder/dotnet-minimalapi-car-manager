@@ -75,13 +75,14 @@ dotnet-minimalapi-car-manager/CarManager.Tests/
 
 ## ⚙️ Tecnologias Utilizadas
 
-- **.NET SDK 9.0** → plataforma principal do projeto  
-- **C# 12** → linguagem de desenvolvimento  
-- **Entity Framework Core** → ORM para persistência  
-- **MySQL (via Docker)** → banco de dados relacional  
-- **JWT (Json Web Token)** → autenticação e autorização  
-- **Rider** → IDEs utilizadas no desenvolvimento  
-- **MSTest** → testes automatizados  
+- **.NET SDK 9.0** → plataforma principal do projeto
+- **C# 12** → linguagem de desenvolvimento
+- **Entity Framework Core** → ORM para persistência
+- **Docker** → containerização da aplicação (API + MySQL)
+- **MySQL** → banco de dados relacional
+- **JWT (Json Web Token)** → autenticação e autorização
+- **Rider** → IDE utilizada no desenvolvimento
+- **MSTest** → testes automatizados
 
 
 ---
@@ -90,30 +91,31 @@ dotnet-minimalapi-car-manager/CarManager.Tests/
 ## 🧪 Como Executar o Projeto
 
 1. Clone o repositório:
-
 ```bash
 git clone https://github.com/wastecoder/dotnet-minimalapi-car-manager.git
 cd dotnet-minimalapi-car-manager
 ```
 
-2. Suba o banco de dados com Docker
-```
-docker compose up -d
+2. Configure o banco de dados com Entity Framework:
+
+Antes de iniciar a aplicação, aplique as migrations para criar o banco de dados:
+```bash
+cd CarManager
+dotnet ef database update
 ```
 
-3. Execute a API
+3. Suba toda a aplicação (API + MySQL) com Docker:
+
+Na raiz do projeto, execute o comando abaixo para construir e iniciar os containers:
+```bash
+docker compose up -d --build
 ```
-cd CarManager
-dotnet run
-```
-A API estará disponível na porta [5054](http://localhost:5054).
+A aplicação e o banco de dados serão inicializados automaticamente.  
+A API estará disponível na porta [8080](http://localhost:8080/swagger).
 
 4. Faça login como administrador para obter o token JWT:
 
-Após iniciar a API, acesse o [Swagger UI](http://localhost:5054/swagger) e vá até o endpoint `POST /login`.
-
-Use as seguintes credenciais padrão para autenticação:
-
+No Swagger, acesse o endpoint `POST /login` e use as credenciais padrão abaixo para autenticação.
 ```json
 {
   "email": "administrador@teste.com",
@@ -121,16 +123,17 @@ Use as seguintes credenciais padrão para autenticação:
 }
 ```
 
-O endpoint retornará um token JWT.
+O endpoint retornará um **token JWT**.  
+Copie-o, clique em **"Authorize"** no topo do Swagger, cole o token (sem aspas e sem "Bearer ") e confirme.  
+Assim, você poderá testar todos os endpoints protegidos como administrador.
 
-Copie o **token JWT** e clique no botão **"Authorize"** no topo do Swagger.
-
-Cole o token, sem as aspas e sem "Bearer ", e confirme.
-
-Isso permitirá testar todos os endpoints protegidos como administrador diretamente pelo Swagger.
-
-5. **(Opcional)** Executar os testes
+5. Caso queira parar os containers:
+```bash
+docker compose down
 ```
+
+6. **(Opcional)** Executar os testes:
+```bash
 cd ../CarManager.Tests
 dotnet test
 ```
@@ -162,14 +165,6 @@ dotnet test
   - Avaliar a migração do banco de testes:
     - Manter **InMemory** no curto prazo (pela simplicidade e rapidez).  
     - Considerar futuramente o uso de **SQLite InMemory** ou **Testcontainers** (para simular melhor o MySQL real em ambiente de CI/CD).
-
-- **🐳 Containerizar totalmente a aplicação**
-  - Criar um **Dockerfile** para a API ASP.NET Core.  
-  - Configurar um **docker-compose.yml** para orquestrar API e banco MySQL.  
-  - Permitir que o sistema completo suba com um único comando:
-    ```
-    docker compose up
-    ```
 
 - **🌱 Automatizar e expandir o seed de dados**
   - Garantir que a criação do banco e a seed rodem automaticamente na inicialização do ambiente de **desenvolvimento** (ex.: via `EnsureCreated()` ou `Migrate()` no `Program.cs`).  
