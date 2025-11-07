@@ -9,9 +9,50 @@ Também inclui **testes de unidade e integração**, garantindo a qualidade e co
 ---
 
 
+## 📖 Documentação da API
+
+### 🧰 Endpoints Principais
+| Método     | Rota              | Descrição                             |
+|------------|-------------------|---------------------------------------|
+| **POST**   | `/login`          | Realiza autenticação e gera token JWT |
+| **GET**    | `/administrators` | Lista administradores com paginação   |
+| **POST**   | `/administrators` | Cria novo administrador               |
+| **GET**    | `/vehicles`       | Lista todos os veículos               |
+| **POST**   | `/vehicles`       | Cadastra um novo veículo              |
+| **PUT**    | `/vehicles/{id}`  | Atualiza um veículo existente         |
+| **DELETE** | `/vehicles/{id}`  | Remove um veículo existente           |
+
+
+### 🗂️ Schema de Administrator
+
+```json
+{
+  "email": "admin@teste.com",
+  "password": "123456",
+  "role": "Adm"
+}
+```
+
+> **Observação:** o campo `role` aceita valores definidos no enum `AdmRole`: `None`, `Adm` e `Editor`.
+
+
+### 🗂️ Schema de Vehicle
+
+```json
+{
+  "name": "Civic",
+  "brand": "Honda",
+  "year": 2024
+}
+```
+
+
+---
+
+
 ## 📂 Estrutura do Projeto
 
-### API
+### ⚙️ API
 ```
 dotnet-minimalapi-car-manager/CarManager/
 ├── Domain/
@@ -26,7 +67,7 @@ dotnet-minimalapi-car-manager/CarManager/
 └── appsettings.json
 ```
 
-### Testes
+### 🧪 Testes
 ```
 dotnet-minimalapi-car-manager/CarManager.Tests/
 ├── Domain/
@@ -110,6 +151,7 @@ Na raiz do projeto, execute o comando abaixo para construir e iniciar os contain
 ```bash
 docker compose up -d --build
 ```
+
 A aplicação e o banco de dados serão inicializados automaticamente.  
 A API estará disponível na porta [8080](http://localhost:8080/swagger).
 
@@ -137,22 +179,6 @@ docker compose down
 cd ../CarManager.Tests
 dotnet test
 ```
-
-
----
-
-
-## 🧰 Endpoints Principais
-
-| Método | Rota | Descrição |
-|:--|:--|:--|
-| **POST** | `/login` | Autenticação e geração de token JWT |
-| **GET** | `/administrators` | Lista administradores com paginação |
-| **POST** | `/administrators` | Cria novo administrador |
-| **GET** | `/vehicles` | Lista todos os veículos |
-| **POST** | `/vehicles` | Cadastra novo veículo |
-| **PUT** | `/vehicles/{id}` | Atualiza um veículo |
-| **DELETE** | `/vehicles/{id}` | Remove um veículo |
 
 
 ---
